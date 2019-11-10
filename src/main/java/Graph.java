@@ -6,8 +6,12 @@ import java.util.List;
 public class Graph {
 
     private Node[] graph;
+    private List<Node> nodeWithPods;
 
-    public Graph(int size) { graph = new Node[size]; }
+    public Graph(int size) {
+        graph = new Node[size];
+        nodeWithPods = new ArrayList<>();
+    }
 
     public void addNode(Node node) { graph[node.getId()] = node; }
 
@@ -30,12 +34,14 @@ public class Graph {
     }
 
     public List<Node> getNodesWithPods() {
-        ArrayList<Node> ret = new ArrayList<>();
-        for (Node node : graph) {
-            if (node.getPodsNumber() != 0){
-                ret.add(node);
-            }
-        }
-        return ret;
+        return nodeWithPods;
     }
+
+    public void addNodeWithPods(Node node){
+        if (!nodeWithPods.contains(node)){
+            nodeWithPods.add(node);
+        }
+    }
+
+    public void removeNodeWithPods(Node node){ nodeWithPods.remove(node); }
 }
