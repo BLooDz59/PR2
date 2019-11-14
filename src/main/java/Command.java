@@ -10,4 +10,6 @@ public class Command {
     public void addCommand(int podsCount, int zoneOrigin, int zoneDest){
         command += String.format("%d %d %d ", podsCount, zoneOrigin, zoneDest);
     }
+
+    public void reset() { command = ""; }
 }

@@ -7,10 +7,12 @@ public class Graph {
 
     private Node[] graph;
     private List<Node> nodeWithPods;
+    private Node qg;
 
     public Graph(int size) {
         graph = new Node[size];
         nodeWithPods = new ArrayList<>();
+        qg = null;
     }
 
     public void addNode(Node node) { graph[node.getId()] = node; }
@@ -44,4 +46,8 @@ public class Graph {
     }
 
     public void removeNodeWithPods(Node node){ nodeWithPods.remove(node); }
+
+    public void setQG(Node node) { qg = node; }
+
+    public Node getQG() { return qg; }
 }

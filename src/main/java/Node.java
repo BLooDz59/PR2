@@ -49,4 +49,12 @@ public class Node {
     public void setPodsNumber(int n) { this.pods = n; }
 
     public List<Node> getLinkedNodes() { return linkedNodes; }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) { return true; }
+        if(obj == null || obj.getClass() != this.getClass()) { return false; }
+        Node node = (Node) obj;
+        return this.id == node.id;
+    }
 }
