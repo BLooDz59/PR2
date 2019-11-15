@@ -7,11 +7,13 @@ public class PodsManager {
     List<Pod> pods;
     int creationId;
     Command command;
+    int MY_ID;
 
-    public PodsManager() {
+    public PodsManager(int playerID) {
         pods = new ArrayList<>();
         creationId = 0;
         command = new Command();
+        MY_ID = playerID;
     }
 
     public void createPod(Node coord, int quantity) {
@@ -21,7 +23,7 @@ public class PodsManager {
         }
     }
 
-    public void checkMerge(Graph map){
+    public void checkMerge(Graph map) {
         for (Node node : map.getNodesWithPods()) {
             if(getPodsOnNode(node).size() > 1){
                 mergePods(getPodsOnNode(node), node);
@@ -29,14 +31,18 @@ public class PodsManager {
         }
     }
 
-    /*public void mergePods(Pod pod1, Pod pod2, Node node) {
-        createPod(node, pod1.getQuantity() + pod2.getQuantity());
-        removePod(pod1);
-        removePod(pod2);
-    }*/
+    //Need debug because it's fail when a fight occur and we want to move to an enemy node, so the pod value is null
+    public void checkBattle(Graph map) {
+        for (Node node : map.getNodesWithPods()) {
+            Pod pod = getPodOnNode(node);
+            int mapPodsNumberInfo = node.getPodsNumber();
+            if(pod.getQuantity() != mapPodsNumberInfo){
+                pod.setQuantity(mapPodsNumberInfo);
+            }
+        }
+    }
 
     public void mergePods(List<Pod> pods, Node node) {
-        System.err.println("MergePods");
         int quantity = 0;
         for (Pod p : pods) {
             quantity += p.getQuantity();
@@ -79,24 +85,24 @@ public class PodsManager {
         return ret;
     }
 
-    public void movePod(Pod pod, Node dest) {
-        command.addCommand(pod.quantity, pod.getNodeOn().getId(), dest.getId());
-        //if(dest.getPodsNumber() > 0) {
-        //    mergePods(pod, getPodOnNode(dest), dest);
-        //}
-        //else {
-        pod.setNodeOn(dest);
-        //}
+    public void movePod(Pod pod, Graph g){
+        Node dest = g.getNode(pod.getPathNodeId());
+        movePod(pod, dest);
     }
 
-    public void movePod(Node src, Node dest) {
-        command.addCommand(getPodOnNode(src).quantity, src.getId(), dest.getId());
-        getPodOnNode(src).setNodeOn(dest);
+    public void movePod(Pod pod, Node dest) {
+        command.addCommand(pod.quantity, pod.getNodeOn().getId(), dest.getId());
+        pod.setNodeOn(dest);
     }
 
     public void sendCommand() {
         System.out.println(command.getCommand());
         command.reset();
+    }
+
+    public void update(Graph map){
+        checkMerge(map);
+        checkBattle(map);
     }
 
     //DEBUG

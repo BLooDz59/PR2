@@ -11,6 +11,8 @@ public class Node {
     private int platinumProductionAmount;
     private int visible;
     private int ownerID;
+    private boolean BFSdiscovered = false;
+    private Node BFSparent;
 
     public Node(int id, int platinumProductionAmount){
         this.id = id;
@@ -20,6 +22,7 @@ public class Node {
         linkedNodes = new ArrayList<>();
         pods = 0;
         enemyPods = 0;
+        BFSparent = null;
     }
 
     public int getId() { return id; }
@@ -57,4 +60,12 @@ public class Node {
         Node node = (Node) obj;
         return this.id == node.id;
     }
+
+    public boolean isBFSdiscovered() { return BFSdiscovered; }
+
+    public void setBFSdiscovered(boolean BFSdiscovered) { this.BFSdiscovered = BFSdiscovered; }
+
+    public void setBFSparent(Node node){ BFSparent = node; }
+
+    public Node getBFSparent(){ return BFSparent; }
 }
