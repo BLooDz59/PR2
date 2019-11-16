@@ -10,6 +10,7 @@ public class Game {
     private int ZONE_COUNT;
     private final PodsManager PODS_MANAGER;
     private final StrategyManager STRATEGY_MANAGER;
+    private final Strategy strategy = Strategy.RUSH_HQ_SMART; //Change the strategy here
 
     private Graph map;
     private boolean itsFirstTurn;
@@ -31,7 +32,6 @@ public class Game {
         int PLAYER_COUNT = IN.nextInt(); // the amount of players (always 2)
         MY_ID = IN.nextInt(); // my player ID (0 or 1)
         ENEMY_ID = MY_ID ^ 1;
-        PODS_MANAGER.setPlayerID(MY_ID); // Create the PodsManager needed to move all the pods
         ZONE_COUNT = IN.nextInt(); // the amount of zones on the map
         map = new Graph(ZONE_COUNT); //Create the map
         int LINK_COUNT = IN.nextInt(); // the amount of links between all zones
@@ -42,15 +42,17 @@ public class Game {
             map.addLinkBetweenNodesFromId(IN.nextInt(), IN.nextInt()); //Update links between nodes in the map
         }
         STRATEGY_MANAGER.setGraph(map);
-        STRATEGY_MANAGER.setStrategy(StrategyManager.Strategy.RUSH_QG);
+        STRATEGY_MANAGER.setStrategy(strategy);
+        STRATEGY_MANAGER.setPlayerID(MY_ID);
+        PODS_MANAGER.setGraph(map);
+        PODS_MANAGER.setPlayerID(MY_ID); // Create the PodsManager needed to move all the pods
     }
 
     public void run() {
         while (true) {
             if(DEBUG) { timer = new Timer(); }
             turnUpdate();
-            runStrategyManager();
-            runPodsManager();
+            runManagers();
             if(DEBUG) { timer.displayDeltaTime(); }
             if(itsFirstTurn) { itsFirstTurn = false; }
             sendCommand();
@@ -75,16 +77,13 @@ public class Game {
         }
     }
 
-    private void runPodsManager() {
+    private void runManagers() {
         PODS_MANAGER.update(map);
+        STRATEGY_MANAGER.run();
         if(DEBUG){
             PODS_MANAGER.debug();
         }
         PODS_MANAGER.movePods(map);
-    }
-
-    private void runStrategyManager() {
-        STRATEGY_MANAGER.run();
     }
 
     private void sendCommand() {

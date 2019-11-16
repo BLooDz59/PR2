@@ -7,7 +7,10 @@ import java.util.List;
 public class PodsManager {
     private List<Pod> pods;
     private Command command;
+    private Graph MAP;
     private int MY_ID;
+    private int creationID;
+
 
     /**
      * Private Constructor
@@ -15,6 +18,7 @@ public class PodsManager {
     private PodsManager() {
         pods = new ArrayList<>();
         command = new Command();
+        creationID = 0;
     }
 
     /**
@@ -30,6 +34,8 @@ public class PodsManager {
 
     public void setPlayerID(int id) { MY_ID = id; }
 
+    public void setGraph(Graph graph) { MAP = graph; }
+
     /**
      * Create a new Pod manage by the PodsManager
      * @param coord where the Pod will be created
@@ -37,7 +43,8 @@ public class PodsManager {
      */
     public void createPod(Node coord, int quantity) {
         if(quantity != 0){
-            pods.add(new Pod(coord, quantity));
+            pods.add(new Pod(coord, quantity, creationID));
+            creationID++;
         }
     }
 
@@ -49,9 +56,10 @@ public class PodsManager {
      */
     public void createPod(Node coord, int quantity, ArrayList<Integer> path){
         if(quantity != 0){
-            Pod p = new Pod(coord, quantity);
+            Pod p = new Pod(coord, quantity, creationID);
             p.setPath(path);
             pods.add(p);
+            creationID++;
         }
     }
 
@@ -200,6 +208,27 @@ public class PodsManager {
     }
 
     public List<Pod> getPods() { return pods; }
+
+    public List<Pod> getPodsWithoutTarget() {
+        ArrayList<Pod> podsWithoutTarget = new ArrayList<>();
+        for (Pod p : pods) {
+            if(!p.hasPath()) {
+                podsWithoutTarget.add(p);
+            }
+        }
+        return podsWithoutTarget;
+    }
+
+    public int getFirstRushPodID() {
+        int ret = -1;
+        for (Pod p : pods) {
+            if(p.getTargetId() == MAP.getEnemyQG().getId()) {
+                ret = p.getID();
+                break;
+            }
+        }
+        return ret;
+    }
 
     /**
      * DEBUG : Display all pods caracteristics from the pods manage by the PodsManager

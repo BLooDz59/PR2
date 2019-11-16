@@ -100,6 +100,18 @@ public class Graph {
      */
     public void removeNodeWithPods(Node node){ nodeWithPods.remove(node); }
 
+    public Node getNeighbourWithMaxPlatinium(Node node){
+        Node ret = null;
+        int quantity = 0;
+        for(Node n : node.getLinkedNodes()) {
+            if(n.getPlatinumProduction() > quantity) {
+                ret = n;
+                quantity = n.getPlatinumProduction();
+            }
+        }
+        return ret;
+    }
+
     /**
      * TEST METHOD : WILL BE DELETE
      * Give a random node from the graph

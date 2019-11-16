@@ -37,8 +37,10 @@ public class PathFinding {
                 }
             }
         }
+        start.setBFSdiscovered(false);
         for(Node n : exploratedNodes){
             n.setBFSdiscovered(false);
+            n.setBFSparent(null);
         }
         Collections.reverse(path);
         path.remove(0);

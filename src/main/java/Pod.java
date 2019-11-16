@@ -3,13 +3,15 @@ package main.java;
 import java.util.ArrayList;
 
 public class Pod {
+    private final int ID;
     private Node coord;
     private int quantity;
     private ArrayList<Integer> path;
     private boolean fighting;
     private boolean reachedPath;
 
-    public Pod(Node coord, int quantity) {
+    public Pod(Node coord, int quantity, int id) {
+        ID = id;
         this.coord = coord;
         this.quantity = quantity;
         path = new ArrayList<>();
@@ -24,6 +26,8 @@ public class Pod {
 
     public Node getNodeOn() { return coord; }
 
+    public int getID() { return ID; }
+
     public int getQuantity() { return quantity; }
 
     public boolean hasPath() { return path.size() > 0; }
@@ -32,6 +36,7 @@ public class Pod {
 
     public ArrayList<Integer> getPath() { return path; }
 
+    public int getTargetId() { return (path.size() > 0) ? path.get(path.size() - 1) : coord.getId(); }
 
     //Setters
 
@@ -51,12 +56,20 @@ public class Pod {
      * put the value of reachedPath to true.
      */
     public void removePathNextElement() {
-        if(path.size() != 0) {
+        if(hasPath()) {
             path.remove(0);
         }
         else {
             reachedPath = true;
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) { return true; }
+        if(obj == null || obj.getClass() != this.getClass()) { return false; }
+        Pod pod = (Pod) obj;
+        return this.ID == pod.ID;
     }
 
     @Override
