@@ -2,8 +2,8 @@ package main.java;
 
 public class Timer {
 
-    long time1;
-    long time2;
+    private long time1;
+    private long time2;
 
     public Timer(){
         time1 = System.currentTimeMillis();

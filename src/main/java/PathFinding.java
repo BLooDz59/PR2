@@ -6,6 +6,12 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class PathFinding {
+    /**
+     * Implementation of the Breadth First Search algorithm
+     * @param goal the node to reach in the graph
+     * @param start the node where the search start
+     * @return a List of Node id to follow to reach the goal Node
+     */
     public static ArrayList<Integer> BFS(Node goal, Node start){
         ArrayList<Node> exploratedNodes = new ArrayList<>();
         ArrayList<Integer> path = new ArrayList<>();
@@ -31,8 +37,10 @@ public class PathFinding {
                 }
             }
         }
+        start.setBFSdiscovered(false);
         for(Node n : exploratedNodes){
             n.setBFSdiscovered(false);
+            n.setBFSparent(null);
         }
         Collections.reverse(path);
         path.remove(0);
