@@ -1,28 +1,64 @@
 package main.java;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class PodsManager {
-    List<Pod> pods;
-    int creationId;
-    Command command;
-    int MY_ID;
+    private List<Pod> pods;
+    private Command command;
+    private int MY_ID;
 
-    public PodsManager(int playerID) {
+    /**
+     * Private Constructor
+     */
+    private PodsManager() {
         pods = new ArrayList<>();
-        creationId = 0;
         command = new Command();
-        MY_ID = playerID;
     }
 
+    /**
+     * Unique PodsManager instance pre-initialized
+     */
+    private static PodsManager INSTANCE = new PodsManager();
+
+    /**
+     * Get the unique instance of PodsManager
+     * @return instance of PodsManager
+     */
+    public static PodsManager getInstance() { return INSTANCE; }
+
+    public void setPlayerID(int id) { MY_ID = id; }
+
+    /**
+     * Create a new Pod manage by the PodsManager
+     * @param coord where the Pod will be created
+     * @param quantity of unite that the Pod contain
+     */
     public void createPod(Node coord, int quantity) {
         if(quantity != 0){
-            pods.add(new Pod(coord, creationId, quantity));
-            creationId++;
+            pods.add(new Pod(coord, quantity));
         }
     }
 
+    /**
+     * Create a new Pod manage by the PodsManager with a specific path
+     * @param coord where the Pod will be created
+     * @param quantity of unite that the Pod contain
+     * @param path that the Pod will follow
+     */
+    public void createPod(Node coord, int quantity, ArrayList<Integer> path){
+        if(quantity != 0){
+            Pod p = new Pod(coord, quantity);
+            p.setPath(path);
+            pods.add(p);
+        }
+    }
+
+    /**
+     * Check if multiple Pods are on the same node in the map and merge them
+     * @param map of the game
+     */
     public void checkMerge(Graph map) {
         for (Node node : map.getNodesWithPods()) {
             if(getPodsOnNode(node).size() > 1){
@@ -31,40 +67,65 @@ public class PodsManager {
         }
     }
 
-    //Need debug because it's fail when a fight occur and we want to move to an enemy node, so the pod value is null
+    /**
+     * Check if Pods have fought during the previous turn and update there quantity
+     * @param map
+     */
     public void checkBattle(Graph map) {
         for (Node node : map.getNodesWithPods()) {
             Pod pod = getPodOnNode(node);
             int mapPodsNumberInfo = node.getPodsNumber();
             if(pod.getQuantity() != mapPodsNumberInfo){
                 pod.setQuantity(mapPodsNumberInfo);
+                pod.setFighting(true);
             }
         }
     }
 
+    /**
+     * Merge multiple Pods to one global Pods on specific Node
+     * @param pods the list of pods that will be merge
+     * @param node the node where the pods are
+     */
     public void mergePods(List<Pod> pods, Node node) {
         int quantity = 0;
+        ArrayList<Integer> path = new ArrayList<>();
         for (Pod p : pods) {
             quantity += p.getQuantity();
+            path = p.getPath();
             removePod(p);
         }
-        createPod(node, quantity);
+        createPod(node, quantity, path);
     }
 
-    public int getPodQuantityOnQG(Node QG){
+    /**
+     * Give the quantity of pods on the HQ
+     * @param HQ the node of the HQ
+     * @return the quantity of pods on the HQ
+     */
+    public int getPodQuantityOnQG(Node HQ){
         int ret = 0;
         for (Pod p : pods) {
-            if(p.getNodeOn().equals(QG)){
+            if(p.getNodeOn().equals(HQ)){
                 ret += p.getQuantity();
             }
         }
         return ret;
     }
 
+    /**
+     * Remove pod from the PodsManager
+     * @param pod to remove
+     */
     public void removePod(Pod pod) {
         pods.remove(pod);
     }
 
+    /**
+     * Give the Pod on the specific node
+     * @param node to test if it contains Pod
+     * @return the Pod if it exist, null if not
+     */
     public Pod getPodOnNode(Node node) {
         Pod ret = null;
         for (Pod p : pods) {
@@ -75,7 +136,12 @@ public class PodsManager {
         return ret;
     }
 
-    public List<Pod> getPodsOnNode(Node node){
+    /**
+     * Give the list of Pods on the specific node
+     * @param node that may contains Pods
+     * @return the list of pods that the node contains
+     */
+    private List<Pod> getPodsOnNode(Node node){
         ArrayList<Pod> ret = new ArrayList<>();
         for (Pod p : pods) {
             if(p.getNodeOn().equals(node)){
@@ -85,27 +151,59 @@ public class PodsManager {
         return ret;
     }
 
-    public void movePod(Pod pod, Graph g){
-        Node dest = g.getNode(pod.getPathNodeId());
-        movePod(pod, dest);
+    /**
+     * Move all the pods manage by the PodsManager
+     * @param graph
+     */
+    public void movePods(Graph graph){
+        Iterator<Pod> itr = pods.iterator();
+        while (itr.hasNext()) {
+            Pod p = itr.next();
+            movePod(p,graph);
+            p.setFighting(false);
+        }
     }
 
-    public void movePod(Pod pod, Node dest) {
-        command.addCommand(pod.quantity, pod.getNodeOn().getId(), dest.getId());
-        pod.setNodeOn(dest);
+    /**
+     * Move the pod to its next location according to its path sequence
+     * The pods won't move if its path is not set
+     * The pods won't move if the next movement it's no valid according to the gamerule
+     * @param pod to move
+     * @param graph
+     */
+    public void movePod(Pod pod, Graph graph){
+        if(pod.hasPath()){
+            Node dest = graph.getNode(pod.getPathNodeId());
+            if(command.isValidCommand(pod.getQuantity(), pod.getNodeOn(), dest, MY_ID)){
+                command.addCommand(pod.getQuantity(), pod.getNodeOn().getId(), dest.getId());
+                pod.setNodeOn(dest);
+                pod.removePathNextElement();
+            }
+        }
     }
 
+    /**
+     * Send the command to the game and reset it
+     */
     public void sendCommand() {
         System.out.println(command.getCommand());
         command.reset();
     }
 
+    /**
+     * Update the PodsManager status according to the game events
+     * @param map
+     */
     public void update(Graph map){
         checkMerge(map);
         checkBattle(map);
     }
 
-    //DEBUG
+    public List<Pod> getPods() { return pods; }
+
+    /**
+     * DEBUG : Display all pods caracteristics from the pods manage by the PodsManager
+     */
     public void debug() {
         for (Pod p : pods) {
             System.err.println(p.toString());

@@ -2,6 +2,7 @@ package main.java;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Graph {
 
@@ -14,31 +15,68 @@ public class Graph {
         graph = new Node[size];
         nodeWithPods = new ArrayList<>();
         qg = null;
+        enemyQG = null;
     }
 
-    public void addNode(Node node) { graph[node.getId()] = node; }
+
+    //Getters
 
     public Node getNode(int id){ return graph[id]; }
 
-    public void addLinkBetweenNodes(Node nodeA, Node nodeB) {
+    public List<Node> getNodesWithPods() { return nodeWithPods; }
+
+    public Node getQG() { return qg; }
+
+    public Node getEnemyQG() { return enemyQG; }
+
+    //Setters
+
+    public void setQG(Node node) { qg = node; }
+
+    public void setEnemyQG(Node node) { enemyQG = node; }
+
+    /**
+     * Add node in the graph
+     * @param node to add in the graph
+     */
+    public void addNode(Node node) { graph[node.getId()] = node; }
+
+    /**
+     * Create a link between nodeA and nodeB
+     * @param nodeA
+     * @param nodeB
+     */
+    private void addLinkBetweenNodes(Node nodeA, Node nodeB) {
         nodeA.addLinkedNode(nodeB);
         nodeB.addLinkedNode(nodeA);
     }
 
+    /**
+     * Create a link between nodeA and nodeB from their id
+     * @param nodeIdA
+     * @param nodeIdB
+     */
     public void addLinkBetweenNodesFromId(int nodeIdA, int nodeIdB){
         addLinkBetweenNodes(this.getNode(nodeIdA), this.getNode(nodeIdB));
     }
 
-    public List<Node> getNodesWithPods() {
-        return nodeWithPods;
-    }
-
+    /**
+     * Add node to the list of node which contains pods
+     * @param node
+     */
     public void addNodeWithPods(Node node){
         if (!nodeWithPods.contains(node)){
             nodeWithPods.add(node);
         }
     }
 
+    /**
+     * Update the pods number for the given node and update the list of node with pods in consequence
+     * @param playerID
+     * @param node
+     * @param pods
+     * @param enemyPods
+     */
     public void updatePods(int playerID, Node node, int pods, int enemyPods){
         if (playerID == 0) {
             node.setPodsNumber(pods);
@@ -52,16 +90,23 @@ public class Graph {
         }
         else {
             removeNodeWithPods(node);
+            PodsManager.getInstance().removePod(PodsManager.getInstance().getPodOnNode(node));
         }
     }
 
+    /**
+     * Remove the given node from the list of node with pods
+     * @param node
+     */
     public void removeNodeWithPods(Node node){ nodeWithPods.remove(node); }
 
-    public void setQG(Node node) { qg = node; }
-
-    public Node getQG() { return qg; }
-
-    public void setEnemyQG(Node node) { enemyQG = node; }
-
-    public Node getEnemyQG() { return enemyQG; }
+    /**
+     * TEST METHOD : WILL BE DELETE
+     * Give a random node from the graph
+     * @return random Node from the graph
+     */
+    public Node getRandomNode() {
+        Random r = new Random();
+        return graph[r.nextInt(graph.length)];
+    }
 }
