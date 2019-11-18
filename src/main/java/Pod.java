@@ -75,5 +75,5 @@ public class Pod {
     }
 
     @Override
-    public String toString() { return quantity + " pods on node " + coord.getId() + " dest" + path; }
+    public String toString() { return quantity + " pods on node " + coord.getId() + " dest" + target.getId(); }
 }

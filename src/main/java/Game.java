@@ -77,8 +77,7 @@ public class Game {
                 if (currentNode.getOwnerID() == ENEMY_ID) { map.setEnemyQG(currentNode); }
             }
             if(currentNode.equals(map.getQG())){
-                Pod p = PODS_MANAGER.createPod(currentNode, currentNode.getPodsNumber() - PODS_MANAGER.getPodQuantityOnQG(currentNode));
-                PODS_MANAGER.addPod(p);
+                PODS_MANAGER.createPod(currentNode, currentNode.getPodsNumber() - PODS_MANAGER.getPodQuantityOnQG(currentNode));
             }
             currentNode.setVisibility(IN.nextInt());
             currentNode.setPlatinumProduction(IN.nextInt());

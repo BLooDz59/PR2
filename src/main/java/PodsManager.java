@@ -98,22 +98,15 @@ public class PodsManager {
 
     public void setGraph(Graph graph) { MAP = graph; }
 
-    public Pod createPod(Node coord, int quantity) {
-        Pod ret = null;
-        if (quantity != 0) {
-            creationID++;
-            ret = new Pod(coord, quantity, creationID);
-        }
-        return ret;
-    }
-
     /**
-     * Add a new Pod manage by the PodsManager
-     * @param p Pod to add
+     * Create a new Pod manage by the PodsManager
+     * @param coord where the Pod will be created
+     * @param quantity of unite that the Pod contain
      */
-    public void addPod(Pod p) {
-        if(p != null) {
-            pods.add(p);
+    public void createPod(Node coord, int quantity) {
+        if(quantity != 0){
+            pods.add(new Pod(coord, quantity, creationID));
+            creationID++;
         }
     }
 
@@ -237,7 +230,6 @@ public class PodsManager {
     public void update(){
         for (Node node : MAP.getNodesWithPods()) {
             checkMerge(node);
-            checkBattle(node);
         }
     }
 
