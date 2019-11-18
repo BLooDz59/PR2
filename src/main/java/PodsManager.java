@@ -6,6 +6,8 @@ import java.util.List;
 
 public class PodsManager {
     private List<Pod> pods;
+    private List<Pod> podsBuffer;
+    private List<Pod> removedPodsBuffer;
     private Command command;
     private Graph MAP;
     private int MY_ID;
@@ -14,9 +16,12 @@ public class PodsManager {
 
     /**
      * Private Constructor
+     * PodsManager is use to manage multiple Pods.
      */
     private PodsManager() {
         pods = new ArrayList<>();
+        podsBuffer = new ArrayList<>();
+        removedPodsBuffer = new ArrayList<>();
         command = new Command();
         creationID = 0;
     }
@@ -31,6 +36,63 @@ public class PodsManager {
      * @return instance of PodsManager
      */
     public static PodsManager getInstance() { return INSTANCE; }
+
+    //Getters
+
+    public List<Pod> getPods() { return pods; }
+
+    public List<Pod> getPodsWithoutTarget() {
+        ArrayList<Pod> podsWithoutTarget = new ArrayList<>();
+        for (Pod p : pods) {
+            if(!p.hasPath()) {
+                podsWithoutTarget.add(p);
+            }
+        }
+        return podsWithoutTarget;
+    }
+
+    public int getFirstRushPodID() {
+        int ret = -1;
+        for (Pod p : pods) {
+            if(p.getTarget() == MAP.getEnemyQG()) {
+                ret = p.getID();
+                break;
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * Give the Pod on the specific node
+     * @param node to test if it contains Pod
+     * @return the Pod if it exist, null if not
+     */
+    public Pod getPodOnNode(Node node) {
+        Pod ret = null;
+        for (Pod p : pods) {
+            if(p.getNodeOn().equals(node)){
+                ret = p;
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * Give the list of Pods on the specific node
+     * @param node that may contains Pods
+     * @return the list of pods that the node contains
+     */
+    private List<Pod> getPodsOnNode(Node node){
+        ArrayList<Pod> ret = new ArrayList<>();
+        for (Pod p : pods) {
+            if(p.getNodeOn().equals(node)){
+                ret.add(p);
+            }
+        }
+        return ret;
+    }
+
+    //Setters
 
     public void setPlayerID(int id) { MY_ID = id; }
 
@@ -65,28 +127,24 @@ public class PodsManager {
 
     /**
      * Check if multiple Pods are on the same node in the map and merge them
-     * @param map of the game
+     * @param node
      */
-    public void checkMerge(Graph map) {
-        for (Node node : map.getNodesWithPods()) {
-            if(getPodsOnNode(node).size() > 1){
-                mergePods(getPodsOnNode(node), node);
-            }
+    public void checkMerge(Node node) {
+        if(getPodsOnNode(node).size() > 1){
+            mergePods(getPodsOnNode(node), node);
         }
     }
 
     /**
      * Check if Pods have fought during the previous turn and update there quantity
-     * @param map
+     * @param node
      */
-    public void checkBattle(Graph map) {
-        for (Node node : map.getNodesWithPods()) {
-            Pod pod = getPodOnNode(node);
-            int mapPodsNumberInfo = node.getPodsNumber();
-            if(pod.getQuantity() != mapPodsNumberInfo){
-                pod.setQuantity(mapPodsNumberInfo);
-                pod.setFighting(true);
-            }
+    public void checkBattle(Node node) {
+        Pod pod = getPodOnNode(node);
+        int mapPodsNumberInfo = node.getPodsNumber();
+        if(pod.getQuantity() != mapPodsNumberInfo){
+            pod.setQuantity(mapPodsNumberInfo);
+            pod.setFighting(true);
         }
     }
 
@@ -130,44 +188,13 @@ public class PodsManager {
     }
 
     /**
-     * Give the Pod on the specific node
-     * @param node to test if it contains Pod
-     * @return the Pod if it exist, null if not
-     */
-    public Pod getPodOnNode(Node node) {
-        Pod ret = null;
-        for (Pod p : pods) {
-            if(p.getNodeOn().equals(node)){
-                ret = p;
-            }
-        }
-        return ret;
-    }
-
-    /**
-     * Give the list of Pods on the specific node
-     * @param node that may contains Pods
-     * @return the list of pods that the node contains
-     */
-    private List<Pod> getPodsOnNode(Node node){
-        ArrayList<Pod> ret = new ArrayList<>();
-        for (Pod p : pods) {
-            if(p.getNodeOn().equals(node)){
-                ret.add(p);
-            }
-        }
-        return ret;
-    }
-
-    /**
      * Move all the pods manage by the PodsManager
-     * @param graph
      */
-    public void movePods(Graph graph){
+    public void movePods(){
         Iterator<Pod> itr = pods.iterator();
         while (itr.hasNext()) {
             Pod p = itr.next();
-            movePod(p,graph);
+            movePod(p);
             p.setFighting(false);
         }
     }
@@ -177,11 +204,10 @@ public class PodsManager {
      * The pods won't move if its path is not set
      * The pods won't move if the next movement it's no valid according to the gamerule
      * @param pod to move
-     * @param graph
      */
-    public void movePod(Pod pod, Graph graph){
+    public void movePod(Pod pod){
         if(pod.hasPath()){
-            Node dest = graph.getNode(pod.getPathNodeId());
+            Node dest = MAP.getNode(pod.getPathNodeId());
             if(command.isValidCommand(pod.getQuantity(), pod.getNodeOn(), dest, MY_ID)){
                 command.addCommand(pod.getQuantity(), pod.getNodeOn().getId(), dest.getId());
                 pod.setNodeOn(dest);
@@ -200,34 +226,55 @@ public class PodsManager {
 
     /**
      * Update the PodsManager status according to the game events
-     * @param map
      */
-    public void update(Graph map){
-        checkMerge(map);
-        checkBattle(map);
+    public void update(){
+        for (Node node : MAP.getNodesWithPods()) {
+            checkMerge(node);
+        }
     }
 
-    public List<Pod> getPods() { return pods; }
-
-    public List<Pod> getPodsWithoutTarget() {
-        ArrayList<Pod> podsWithoutTarget = new ArrayList<>();
-        for (Pod p : pods) {
-            if(!p.hasPath()) {
-                podsWithoutTarget.add(p);
-            }
+    /**
+     * Split the specified pod into n pods after postUpdate()
+     * @param pod
+     * @param n
+     */
+    public void splitPod(Pod pod, int n) {
+        int newQuantity = pod.getQuantity() / n;
+        Node coord = pod.getNodeOn();
+        if(pod.getQuantity() % n != 0) {
+            bufferAddPod(coord, pod.getQuantity() % n);
         }
-        return podsWithoutTarget;
+        for (int i = 0; i < n; i++) {
+            bufferAddPod(coord, newQuantity);
+        }
+        addPodToRemove(pod);
     }
 
-    public int getFirstRushPodID() {
-        int ret = -1;
-        for (Pod p : pods) {
-            if(p.getTargetId() == MAP.getEnemyQG().getId()) {
-                ret = p.getID();
-                break;
-            }
+    public void postUpdate() {
+        pods.addAll(podsBuffer);
+        pods.removeAll(removedPodsBuffer);
+        podsBuffer.clear();
+        removedPodsBuffer.clear();
+    }
+
+    /**
+     * Add a pod the add buffer
+     * @param coord
+     * @param quantity
+     */
+    public void bufferAddPod(Node coord, int quantity) {
+        if(quantity != 0){
+            podsBuffer.add(new Pod(coord, quantity, creationID));
+            creationID++;
         }
-        return ret;
+    }
+
+    /**
+     * Add a pod to remove in the remove buffer
+     * @param p
+     */
+    public void addPodToRemove(Pod p) {
+        removedPodsBuffer.add(p);
     }
 
     /**

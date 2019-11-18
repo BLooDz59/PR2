@@ -13,6 +13,7 @@ public class Node {
     private int ownerID;
     private boolean BFSdiscovered;
     private Node BFSparent;
+    private boolean targeted;
 
     public Node(int id, int platinumProductionAmount){
         this.ID = id;
@@ -24,6 +25,7 @@ public class Node {
         enemyPods = 0;
         BFSdiscovered = false;
         BFSparent = null;
+        targeted = false;
     }
 
 
@@ -47,6 +49,8 @@ public class Node {
 
     public Node getBFSparent(){ return BFSparent; }
 
+    public boolean isTargeted() { return targeted; }
+
 
     //Setters
 
@@ -63,6 +67,8 @@ public class Node {
     public void setBFSdiscovered(boolean BFSdiscovered) { this.BFSdiscovered = BFSdiscovered; }
 
     public void setBFSparent(Node node){ BFSparent = node; }
+
+    public void setTargeted(boolean val) { targeted = val; }
 
     /**
      * Add the node given in parameters to the list of neighbours

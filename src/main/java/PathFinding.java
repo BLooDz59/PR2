@@ -46,4 +46,40 @@ public class PathFinding {
         path.remove(0);
         return path;
     }
+
+    /**
+     * Search the closest enemy or neutral node not targeted from the started node
+     * @param start
+     * @return
+     */
+    public static Node BFSNearestEnemyOrNeutralNodeNotTargeted(Node start){
+        ArrayList<Node> exploratedNodes = new ArrayList<>();
+        Node ret = start;
+        Queue<Node> queue = new LinkedList<>();
+        start.setBFSdiscovered(true);
+        queue.add(start);
+        while (queue.size() != 0){
+            Node node = queue.remove();
+            if(node.getOwnerID() != StrategyManager.getInstance().getPlayerID() && !node.isTargeted()){
+                ret = node;
+                break;
+            }
+            else {
+                for(Node n : node.getLinkedNodes()){
+                    if(!n.isBFSdiscovered()){
+                        exploratedNodes.add(n);
+                        n.setBFSdiscovered(true);
+                        n.setBFSparent(node);
+                        queue.add(n);
+                    }
+                }
+            }
+        }
+        start.setBFSdiscovered(false);
+        for(Node n : exploratedNodes){
+            n.setBFSdiscovered(false);
+            n.setBFSparent(null);
+        }
+        return ret;
+    }
 }
