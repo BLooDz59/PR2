@@ -10,24 +10,25 @@ public class Game {
     private int ZONE_COUNT;
     private final PodsManager PODS_MANAGER;
     private final StrategyManager STRATEGY_MANAGER;
-    private final Strategy strategy = Strategy.RUSH_HQ_SMART; //Change the strategy here
+    private final Strategy strategy = Strategy.TEST; //Change the strategy here
 
     private Graph map;
     private boolean itsFirstTurn;
 
     private boolean DEBUG = false; //Change value for Debug TO DELETE
-    private Random r; //TO DELETE
     private Timer timer;
 
 
     public Game(){
         IN = new Scanner(System.in); //Scanner to read input
-        r = new Random(); //Just to test random movement, TO DELETE
         itsFirstTurn = true; // Status True if it's the first turn of the game
         PODS_MANAGER = PodsManager.getInstance();
         STRATEGY_MANAGER = StrategyManager.getInstance();
     }
 
+    /**
+     * Setup the game
+     */
     public void setup(){
         int PLAYER_COUNT = IN.nextInt(); // the amount of players (always 2)
         MY_ID = IN.nextInt(); // my player ID (0 or 1)
@@ -48,6 +49,9 @@ public class Game {
         PODS_MANAGER.setPlayerID(MY_ID); // Create the PodsManager needed to move all the pods
     }
 
+    /**
+     * Run the game
+     */
     public void run() {
         while (true) {
             if(DEBUG) { timer = new Timer(); }
@@ -59,6 +63,9 @@ public class Game {
         }
     }
 
+    /**
+     * Calls every game loop, gives updated map info
+     */
     private void turnUpdate() {
         int myPlatinum = IN.nextInt(); // your available Platinum
         for (int i = 0; i < ZONE_COUNT; i++) {
@@ -70,22 +77,31 @@ public class Game {
                 if (currentNode.getOwnerID() == ENEMY_ID) { map.setEnemyQG(currentNode); }
             }
             if(currentNode.equals(map.getQG())){
-                PODS_MANAGER.createPod(currentNode, currentNode.getPodsNumber() - PODS_MANAGER.getPodQuantityOnQG(currentNode));
+                Pod p = PODS_MANAGER.createPod(currentNode, currentNode.getPodsNumber() - PODS_MANAGER.getPodQuantityOnQG(currentNode));
+                PODS_MANAGER.addPod(p);
             }
             currentNode.setVisibility(IN.nextInt());
             currentNode.setPlatinumProduction(IN.nextInt());
         }
     }
 
+    /**
+     * Calls the differents managers events
+     */
     private void runManagers() {
-        PODS_MANAGER.update(map);
+        PODS_MANAGER.update();
+        STRATEGY_MANAGER.update();
+        PODS_MANAGER.postUpdate();
         STRATEGY_MANAGER.run();
         if(DEBUG){
             PODS_MANAGER.debug();
         }
-        PODS_MANAGER.movePods(map);
+        PODS_MANAGER.movePods();
     }
 
+    /**
+     * Send command to the CodinGame game
+     */
     private void sendCommand() {
         //First line for movement commands, second line no longer used (see the protocol in the statement for details)
         PODS_MANAGER.sendCommand();

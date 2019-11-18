@@ -9,6 +9,7 @@ public class Pod {
     private ArrayList<Integer> path;
     private boolean fighting;
     private boolean reachedPath;
+    private Node target;
 
     public Pod(Node coord, int quantity, int id) {
         ID = id;
@@ -19,10 +20,6 @@ public class Pod {
     }
 
     //Getters
-
-    public boolean hasReachedPath() { return reachedPath; }
-
-    public boolean isFighting() { return fighting; }
 
     public Node getNodeOn() { return coord; }
 
@@ -36,7 +33,7 @@ public class Pod {
 
     public ArrayList<Integer> getPath() { return path; }
 
-    public int getTargetId() { return (path.size() > 0) ? path.get(path.size() - 1) : coord.getId(); }
+    public Node getTarget() { return target; }
 
     //Setters
 
@@ -46,20 +43,25 @@ public class Pod {
 
     public void setNodeOn(Node coord) { this.coord = coord; }
 
-    public void setTarget(Node target) { path = PathFinding.BFS(target, coord); }
+    public void setTarget(Node target) {
+        this.target = target;
+        target.setTargeted(true);
+        path = PathFinding.BFS(target, coord);
+    }
 
     public void setQuantity(int quantity) { this.quantity = quantity; }
 
     /**
      * Remove the first elements of the path sequence
      * If the path sequence length equal to zero,
-     * put the value of reachedPath to true.
+     * put the value of reachedPath to true, and target targeted status to false.
      */
     public void removePathNextElement() {
         if(hasPath()) {
             path.remove(0);
         }
         else {
+            target.setTargeted(false);
             reachedPath = true;
         }
     }
@@ -73,5 +75,5 @@ public class Pod {
     }
 
     @Override
-    public String toString() { return quantity + " pods on node " + coord.getId() + " is fighting : " + fighting; }
+    public String toString() { return quantity + " pods on node " + coord.getId() + " dest" + path; }
 }
