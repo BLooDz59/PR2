@@ -10,7 +10,7 @@ public class Game {
     private int ZONE_COUNT;
     private final PodsManager PODS_MANAGER;
     private final StrategyManager STRATEGY_MANAGER;
-    private final Strategy strategy = Strategy.TEST; //Change the strategy here
+    private final Strategy strategy = Strategy.RULES; //Change the strategy here
 
     private Graph map;
     private boolean itsFirstTurn;

@@ -51,6 +51,16 @@ public class Node {
 
     public boolean isTargeted() { return targeted; }
 
+    public List<Node> getLinkedNodesWithPlatinium() {
+        ArrayList<Node> ret = new ArrayList<>();
+        for(Node n : linkedNodes) {
+            if (n.getPlatinumProduction() > 0) {
+                ret.add(n);
+            }
+        }
+        return ret;
+    }
+
 
     //Setters
 

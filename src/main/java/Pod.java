@@ -5,11 +5,12 @@ import java.util.ArrayList;
 public class Pod {
     private final int ID;
     private Node coord;
+    private Node target;
     private int quantity;
     private ArrayList<Integer> path;
     private boolean fighting;
     private boolean reachedPath;
-    private Node target;
+    private boolean canBeMerged;
 
     public Pod(Node coord, int quantity, int id) {
         ID = id;
@@ -17,6 +18,7 @@ public class Pod {
         this.quantity = quantity;
         path = new ArrayList<>();
         reachedPath = false;
+        canBeMerged = true;
     }
 
     //Getters
@@ -31,13 +33,9 @@ public class Pod {
 
     public int getPathNodeId() { return path.get(0); }
 
-    public ArrayList<Integer> getPath() { return path; }
-
     public Node getTarget() { return target; }
 
     //Setters
-
-    public void setPath(ArrayList<Integer> path) { this.path = path; }
 
     public void setFighting(boolean val) { fighting = val; }
 
@@ -50,6 +48,8 @@ public class Pod {
     }
 
     public void setQuantity(int quantity) { this.quantity = quantity; }
+
+    public void setCanBeMerged(boolean val) { canBeMerged = val; }
 
     /**
      * Remove the first elements of the path sequence

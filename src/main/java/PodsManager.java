@@ -111,21 +111,6 @@ public class PodsManager {
     }
 
     /**
-     * Create a new Pod manage by the PodsManager with a specific path
-     * @param coord where the Pod will be created
-     * @param quantity of unite that the Pod contain
-     * @param path that the Pod will follow
-     */
-    public void createPod(Node coord, int quantity, ArrayList<Integer> path){
-        if(quantity != 0){
-            Pod p = new Pod(coord, quantity, creationID);
-            p.setPath(path);
-            pods.add(p);
-            creationID++;
-        }
-    }
-
-    /**
      * Check if multiple Pods are on the same node in the map and merge them
      * @param node
      */
@@ -155,13 +140,11 @@ public class PodsManager {
      */
     public void mergePods(List<Pod> pods, Node node) {
         int quantity = 0;
-        ArrayList<Integer> path = new ArrayList<>();
         for (Pod p : pods) {
             quantity += p.getQuantity();
-            path = p.getPath();
             removePod(p);
         }
-        createPod(node, quantity, path);
+        createPod(node, quantity);
     }
 
     /**
@@ -177,6 +160,22 @@ public class PodsManager {
             }
         }
         return ret;
+    }
+
+    /**
+     * Return the biggest Pod
+     * @return Pod with biggest quantity
+     */
+    public Pod getMaxQuantityPod() {
+        int quantity = 0;
+        Pod pod = null;
+        for(Pod p : pods) {
+            if(p.getQuantity() > quantity) {
+                quantity = p.getQuantity();
+                pod = p;
+            }
+        }
+        return pod;
     }
 
     /**
@@ -230,6 +229,7 @@ public class PodsManager {
     public void update(){
         for (Node node : MAP.getNodesWithPods()) {
             checkMerge(node);
+            checkBattle(node);
         }
     }
 
@@ -239,15 +239,17 @@ public class PodsManager {
      * @param n
      */
     public void splitPod(Pod pod, int n) {
-        int newQuantity = pod.getQuantity() / n;
-        Node coord = pod.getNodeOn();
-        if(pod.getQuantity() % n != 0) {
-            bufferAddPod(coord, pod.getQuantity() % n);
+        if (n != 0) {
+            int newQuantity = pod.getQuantity() / n;
+            Node coord = pod.getNodeOn();
+            if(pod.getQuantity() % n != 0) {
+                bufferAddPod(coord, pod.getQuantity() % n);
+            }
+            for (int i = 0; i < n; i++) {
+                bufferAddPod(coord, newQuantity);
+            }
+            addPodToRemove(pod);
         }
-        for (int i = 0; i < n; i++) {
-            bufferAddPod(coord, newQuantity);
-        }
-        addPodToRemove(pod);
     }
 
     public void postUpdate() {

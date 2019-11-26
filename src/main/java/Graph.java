@@ -29,6 +29,16 @@ public class Graph {
 
     public Node getEnemyQG() { return enemyQG; }
 
+    public List<Node> getVisibleNode() {
+        ArrayList<Node> ret = new ArrayList<>();
+        for(Node n : graph) {
+            if (n.isVisible() == 1) {
+                ret.add(n);
+            }
+        }
+        return ret;
+    }
+
     //Setters
 
     public void setQG(Node node) { qg = node; }
