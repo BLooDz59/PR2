@@ -10,7 +10,7 @@ public class Game {
     private int ZONE_COUNT;
     private final PodsManager PODS_MANAGER;
     private final StrategyManager STRATEGY_MANAGER;
-    private final Strategy strategy = Strategy.TEST; //Change the strategy here
+    private final Strategy strategy = Strategy.THOMAS; //Change the strategy here
 
     private Graph map;
     private boolean itsFirstTurn;
@@ -56,11 +56,18 @@ public class Game {
         while (true) {
             if(DEBUG) { timer = new Timer(); }
             turnUpdate();
+            if (itsFirstTurn) firstTurn();
             runManagers();
             if(DEBUG) { timer.displayDeltaTime(); }
-            if(itsFirstTurn) { itsFirstTurn = false; }
             sendCommand();
         }
+    }
+
+    private void firstTurn() {
+        if(PathFinding.BFS(map.getEnemyQG(), map.getQG()).size()<=6) STRATEGY_MANAGER.setStrategy(Strategy.RUSH_HQ);
+        map.setStrategicNodes();
+        map.displayStrategicNodes();
+        itsFirstTurn = false;
     }
 
     /**
@@ -81,6 +88,7 @@ public class Game {
             }
             currentNode.setVisibility(IN.nextInt());
             currentNode.setPlatinumProduction(IN.nextInt());
+            currentNode.setTargeted(false);
         }
     }
 

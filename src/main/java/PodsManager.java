@@ -92,6 +92,12 @@ public class PodsManager {
         return ret;
     }
 
+    /**
+     * Give the number of pods manage by the PodsManager
+     * @return number of managed pods
+     */
+    public int getPodsQuantity(){ return pods.size(); }
+
     //Setters
 
     public void setPlayerID(int id) { MY_ID = id; }
@@ -106,21 +112,6 @@ public class PodsManager {
     public void createPod(Node coord, int quantity) {
         if(quantity != 0){
             pods.add(new Pod(coord, quantity, creationID));
-            creationID++;
-        }
-    }
-
-    /**
-     * Create a new Pod manage by the PodsManager with a specific path
-     * @param coord where the Pod will be created
-     * @param quantity of unite that the Pod contain
-     * @param path that the Pod will follow
-     */
-    public void createPod(Node coord, int quantity, ArrayList<Integer> path){
-        if(quantity != 0){
-            Pod p = new Pod(coord, quantity, creationID);
-            p.setPath(path);
-            pods.add(p);
             creationID++;
         }
     }
@@ -155,13 +146,11 @@ public class PodsManager {
      */
     public void mergePods(List<Pod> pods, Node node) {
         int quantity = 0;
-        ArrayList<Integer> path = new ArrayList<>();
         for (Pod p : pods) {
             quantity += p.getQuantity();
-            path = p.getPath();
             removePod(p);
         }
-        createPod(node, quantity, path);
+        createPod(node, quantity);
     }
 
     /**
@@ -177,6 +166,22 @@ public class PodsManager {
             }
         }
         return ret;
+    }
+
+    /**
+     * Return the biggest Pod
+     * @return Pod with biggest quantity
+     */
+    public Pod getMaxQuantityPod() {
+        int quantity = 0;
+        Pod pod = null;
+        for(Pod p : pods) {
+            if(p.getQuantity() > quantity) {
+                quantity = p.getQuantity();
+                pod = p;
+            }
+        }
+        return pod;
     }
 
     /**
@@ -207,9 +212,12 @@ public class PodsManager {
      */
     public void movePod(Pod pod){
         if(pod.hasPath()){
+            pod.setLastTarget(pod.getNodeOn());
             Node dest = MAP.getNode(pod.getPathNodeId());
             if(command.isValidCommand(pod.getQuantity(), pod.getNodeOn(), dest, MY_ID)){
                 command.addCommand(pod.getQuantity(), pod.getNodeOn().getId(), dest.getId());
+                pod.addHistoricElement(dest);
+                dest.setVisited(true);
                 pod.setNodeOn(dest);
                 pod.removePathNextElement();
             }
@@ -230,6 +238,7 @@ public class PodsManager {
     public void update(){
         for (Node node : MAP.getNodesWithPods()) {
             checkMerge(node);
+            checkBattle(node);
         }
     }
 
@@ -239,13 +248,25 @@ public class PodsManager {
      * @param n
      */
     public void splitPod(Pod pod, int n) {
-        int newQuantity = pod.getQuantity() / n;
-        Node coord = pod.getNodeOn();
-        if(pod.getQuantity() % n != 0) {
-            bufferAddPod(coord, pod.getQuantity() % n);
+        if (n != 0) {
+            int newQuantity = pod.getQuantity() / n;
+            Node coord = pod.getNodeOn();
+            if(pod.getQuantity() % n != 0) {
+                bufferAddPod(coord, pod.getQuantity() % n, pod.getState());
+            }
+            for (int i = 0; i < n; i++) {
+                bufferAddPod(coord, newQuantity, pod.getState());
+            }
+            addPodToRemove(pod);
         }
-        for (int i = 0; i < n; i++) {
-            bufferAddPod(coord, newQuantity);
+    }
+
+
+    public void splitSpawnedPod(Pod pod, int rusherQuantity){
+        int exploratorNumber = pod.getQuantity() - rusherQuantity;
+        bufferAddPod(pod.getNodeOn(), rusherQuantity, Pod.State.RUSHER);
+        for (int i = 0; i < exploratorNumber; i++) {
+            bufferAddPod(pod.getNodeOn(), 1, Pod.State.EXPLORER);
         }
         addPodToRemove(pod);
     }
@@ -263,8 +284,12 @@ public class PodsManager {
      * @param quantity
      */
     public void bufferAddPod(Node coord, int quantity) {
-        if(quantity != 0){
-            podsBuffer.add(new Pod(coord, quantity, creationID));
+        bufferAddPod(coord, quantity, Pod.State.NONE);
+    }
+
+    public void bufferAddPod(Node coord, int quantity, Pod.State state) {
+        if(quantity != 0) {
+            podsBuffer.add(new Pod(coord, quantity, creationID, state));
             creationID++;
         }
     }
@@ -275,6 +300,22 @@ public class PodsManager {
      */
     public void addPodToRemove(Pod p) {
         removedPodsBuffer.add(p);
+    }
+
+    public int getRusherPodsQuantity(){
+        int ret = 0;
+        for (Pod p : pods){
+            if(p.getState() == Pod.State.RUSHER)ret += p.getQuantity();
+        }
+        return ret;
+    }
+
+    public int getExploratorPods(){
+        int ret = 0;
+        for(Pod p : pods){
+            if(p.getState() == Pod.State.EXPLORER)ret += p.getQuantity();
+        }
+        return ret;
     }
 
     /**

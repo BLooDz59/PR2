@@ -1,22 +1,40 @@
 package main.java;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Pod {
     private final int ID;
     private Node coord;
+    private Node target;
     private int quantity;
     private ArrayList<Integer> path;
+    private ArrayList<Node> historicPath;
     private boolean fighting;
     private boolean reachedPath;
-    private Node target;
+    private boolean canBeMerged;
+
+    private Node lastTarget;
+    private State state;
+
+    public enum State { EXPLORER, RUSHER, SPAWNED, NONE }
 
     public Pod(Node coord, int quantity, int id) {
         ID = id;
         this.coord = coord;
         this.quantity = quantity;
         path = new ArrayList<>();
+        historicPath = new ArrayList<>();
         reachedPath = false;
+        canBeMerged = true;
+        reachedPath = false;
+        state = State.SPAWNED;
+        lastTarget = null;
+    }
+
+    public Pod(Node coord, int quantity, int id, State state) {
+        this(coord, quantity, id);
+        this.state = state;
     }
 
     //Getters
@@ -31,13 +49,15 @@ public class Pod {
 
     public int getPathNodeId() { return path.get(0); }
 
-    public ArrayList<Integer> getPath() { return path; }
+    public ArrayList<Node> getHistoricPath() { return historicPath; }
 
     public Node getTarget() { return target; }
 
-    //Setters
+    public Node getLastTarget() { return lastTarget; }
 
-    public void setPath(ArrayList<Integer> path) { this.path = path; }
+    public State getState() { return state; }
+
+    //Setters
 
     public void setFighting(boolean val) { fighting = val; }
 
@@ -50,6 +70,14 @@ public class Pod {
     }
 
     public void setQuantity(int quantity) { this.quantity = quantity; }
+
+    public void setCanBeMerged(boolean val) { canBeMerged = val; }
+
+    public void setState(State state){this.state = state;}
+
+    public void setHistoricPath(ArrayList<Node> historicPath) { this.historicPath = historicPath; }
+
+    public void setLastTarget(Node lastTarget) { this.lastTarget = lastTarget; }
 
     /**
      * Remove the first elements of the path sequence
@@ -66,6 +94,8 @@ public class Pod {
         }
     }
 
+    public void addHistoricElement(Node element) { historicPath.add(element); }
+
     @Override
     public boolean equals(Object obj) {
         if(this == obj) { return true; }
@@ -74,6 +104,46 @@ public class Pod {
         return this.ID == pod.ID;
     }
 
+    public void run() {
+        switch (state) {
+            case RUSHER:
+                rush();
+                break;
+            case EXPLORER:
+                explore();
+                break;
+        }
+    }
+
+    private void explore() {
+        Node bestTarget = selectBestTarget();
+        if (bestTarget == null) bestTarget = StrategyManager.getInstance().getMap().getEnemyQG();
+        setTarget(bestTarget);
+    }
+
+    private void rush() {
+        StrategyManager strategyManager = StrategyManager.getInstance();
+        for (Node node : getNodeOn().getLinkedNodes()){
+            if(node.getOwnerID() == (strategyManager.getPlayerID()^1) && node.getPlatinumProduction() !=0 ){
+                setTarget(node);
+                break;
+            }
+        }
+        if(!hasPath()) setTarget(strategyManager.getMap().getEnemyQG());
+    }
+
+    private Node selectBestTarget() {
+        Node ret = null;
+        int bestInterest = 0;
+        for (Node n : getNodeOn().getLinkedNodes()) {
+            if(n.getInterest() > bestInterest) {
+                ret = n;
+                bestInterest = n.getInterest();
+            }
+        }
+        return ret;
+    }
+
     @Override
-    public String toString() { return quantity + " pods on node " + coord.getId() + " dest" + target.getId(); }
+    public String toString() { return quantity + " pods on node " + coord.getId(); }
 }

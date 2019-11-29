@@ -10,10 +10,15 @@ public class Graph {
     private List<Node> nodeWithPods;
     private Node qg;
     private Node enemyQG;
+    private List<Node> strategicNodes;
+
+    private int[][] lengthBetweenZones;
+    private Timer timer;
 
     public Graph(int size) {
         graph = new Node[size];
         nodeWithPods = new ArrayList<>();
+        strategicNodes = new ArrayList<>();
         qg = null;
         enemyQG = null;
     }
@@ -120,5 +125,53 @@ public class Graph {
     public Node getRandomNode() {
         Random r = new Random();
         return graph[r.nextInt(graph.length)];
+    }
+
+    public void calculateLengthBetweenZones(){
+        timer = new Timer();
+        for (Node n1 : graph) {
+            for(Node n2 : graph) {
+                if (!n2.equals(n1) && lengthBetweenZones[n1.getId()][n2.getId()] == 0) {
+                    lengthBetweenZones[n1.getId()][n2.getId()] = PathFinding.BFS(n1,n2).size();
+                    lengthBetweenZones[n2.getId()][n1.getId()] = lengthBetweenZones[n1.getId()][n2.getId()];
+                }
+            }
+            timer.displayDeltaTime();
+        }
+    }
+
+    public void updateNodesInterest(Pod p) {
+        for (Node n : p.getNodeOn().getLinkedNodes()) {
+            int interest = 0;
+            if (n.getPlatinumProduction() != 0 && n.getOwnerID()!= StrategyManager.getInstance().getPlayerID()) interest += 1 + n.getPlatinumProduction();
+            for (Node node : n.getLinkedNodes()){
+                interest += node.isVisible();
+            }
+            if(n.isNeutral()) interest *=10;
+            if(n.getOwnerID() == (StrategyManager.getInstance().getPlayerID()^1)) interest *=20;
+            if(n.isTargeted() || p.getLastTarget() == n) interest = 0;
+            n.setInterest(interest);
+        }
+    }
+
+    public void setStrategicNodes() {
+        for (Node n : graph) {
+            if (PathFinding.BFS(qg, n).size() == PathFinding.BFS(enemyQG, n).size()) {
+                strategicNodes.add(n);
+            }
+        }
+    }
+
+    public List<Node> getStrategicNodes() { return strategicNodes; }
+
+
+
+    //DEBUG
+    public Node[] getGraph() { return graph; }
+
+    public void displayStrategicNodes() {
+        for (Node n : strategicNodes) {
+            System.err.println(n.getId());
+        }
     }
 }

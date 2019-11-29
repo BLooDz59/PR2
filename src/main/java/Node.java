@@ -13,6 +13,8 @@ public class Node {
     private int ownerID;
     private boolean BFSdiscovered;
     private Node BFSparent;
+    private int interest;
+    private boolean visited;
     private boolean targeted;
 
     public Node(int id, int platinumProductionAmount){
@@ -26,6 +28,7 @@ public class Node {
         BFSdiscovered = false;
         BFSparent = null;
         targeted = false;
+        interest=0;
     }
 
 
@@ -51,6 +54,22 @@ public class Node {
 
     public boolean isTargeted() { return targeted; }
 
+    public int getInterest() { return interest; }
+
+    public boolean isVisited() { return visited; }
+
+    public boolean isNeutral() { return ownerID < 0; }
+
+    public List<Node> getLinkedNodesWithPlatinium() {
+        ArrayList<Node> ret = new ArrayList<>();
+        for(Node n : linkedNodes) {
+            if (n.getPlatinumProduction() > 0) {
+                ret.add(n);
+            }
+        }
+        return ret;
+    }
+
 
     //Setters
 
@@ -69,6 +88,10 @@ public class Node {
     public void setBFSparent(Node node){ BFSparent = node; }
 
     public void setTargeted(boolean val) { targeted = val; }
+
+    public void setInterest(int interest) {    this.interest = interest; }
+
+    public void setVisited(boolean val) { visited = val; }
 
     /**
      * Add the node given in parameters to the list of neighbours
