@@ -8,6 +8,7 @@ public class StrategyManager {
     private Strategy STRATEGY;
     private Graph MAP;
     private int MY_ID;
+    private final float RUSHER_RATIO = 0.7F;
 
     /**
      * Private Constructor
@@ -20,11 +21,15 @@ public class StrategyManager {
      */
     private static StrategyManager INSTANCE = new StrategyManager();
 
+    private static PodsManager PODS_MANAGER = PodsManager.getInstance();
+
     /**
      * Get the unique instance of StrategyManager
      * @return instance of StrategyManager
      */
     public static StrategyManager getInstance() { return INSTANCE; }
+
+    public Graph getMap() { return MAP; }
 
     //Getters
 
@@ -41,97 +46,151 @@ public class StrategyManager {
     /**
      * Update event call in the game loop
      */
+    //TODO : Just for test but remove switch case and select one strategy for the prod
     public void update() {
-        if(STRATEGY == Strategy.RUSH_HQ_SMART) {
-            for (Pod p : PodsManager.getInstance().getPods()) {
-                if(p.getQuantity() >= 10) {
-                    PodsManager.getInstance().splitPod(p, 10);
-                }
-            }
-        }
-        else if(STRATEGY == Strategy.RULES) {
-            for (Pod p : PodsManager.getInstance().getPods()) {
-                int factor = 0;
-                List<Node> neighboursWithPlatinium = p.getNodeOn().getLinkedNodesWithPlatinium();
-                List<Node> neighboursWithPlatiniumDontBelongPlayer = new ArrayList<>();
-                for (Node n : neighboursWithPlatinium) {
-                    if (n.getOwnerID() != MY_ID) {
-                        neighboursWithPlatiniumDontBelongPlayer.add(n);
+        switch (STRATEGY) {
+            case RUSH_HQ_SMART:
+                for (Pod p : PodsManager.getInstance().getPods()) {
+                    if(p.getQuantity() >= 10) {
+                        PodsManager.getInstance().splitPod(p, 10);
                     }
                 }
-                for (Node n : p.getNodeOn().getLinkedNodes()) {
-                    if(n.getOwnerID() != MY_ID && n.getPlatinumProduction() == 0) {
-                        factor++;
+                break;
+            case RULES:
+                for (Pod p : PodsManager.getInstance().getPods()) {
+                    int factor = 0;
+                    List<Node> neighboursWithPlatinium = p.getNodeOn().getLinkedNodesWithPlatinium();
+                    List<Node> neighboursWithPlatiniumDontBelongPlayer = new ArrayList<>();
+                    for (Node n : neighboursWithPlatinium) {
+                        if (n.getOwnerID() != MY_ID) {
+                            neighboursWithPlatiniumDontBelongPlayer.add(n);
+                        }
+                    }
+                    for (Node n : p.getNodeOn().getLinkedNodes()) {
+                        if(n.getOwnerID() != MY_ID && n.getPlatinumProduction() == 0) {
+                            factor++;
+                        }
+                    }
+                    PODS_MANAGER.splitPod(p, neighboursWithPlatiniumDontBelongPlayer.size() + factor);
+                }
+                break;
+            case THOMAS:
+                int globalPodsQuantity = PODS_MANAGER.getPodsQuantity();
+                float rusherRatio = (float) PODS_MANAGER.getRusherPodsQuantity() / globalPodsQuantity;
+                for(Pod p : PODS_MANAGER.getPods()) {
+                    switch (p.getState()) {
+                        case SPAWNED:
+                            int rusherQuantity = (int) ((RUSHER_RATIO - rusherRatio) * p.getQuantity());
+                            PODS_MANAGER.splitSpawnedPod(p, rusherQuantity);
+                            break;
+                        case EXPLORER:
+                            if (p.getQuantity() > 1) PODS_MANAGER.splitPod(p, p.getQuantity());
+                            break;
                     }
                 }
-                PodsManager.getInstance().splitPod(p, neighboursWithPlatiniumDontBelongPlayer.size() + factor);
-            }
+                break;
+            case THOMAS_TEST:
+                for(Pod p : PODS_MANAGER.getPods()){
+                    if(p.getQuantity()>3){
+                        PODS_MANAGER.splitPod(p,(p.getQuantity()/3)+1);
+                    }
+                }
+                break;
         }
     }
 
     /**
      * Run event call in the game loop
      */
+    //TODO : Just for test but remove switch case and select one strategy for the prod
     public void run() {
-        if (STRATEGY == Strategy.RUSH_HQ_SMART) {
-            for(Pod p : PodsManager.getInstance().getPodsWithoutTarget()) {
-                p.setTarget(MAP.getEnemyQG());
-            }
-            for(Pod p : PodsManager.getInstance().getPods()) {
-                if(!(p.getID() == PodsManager.getInstance().getFirstRushPodID())){
-                    Node maxPlatiniumTarget = MAP.getNeighbourWithMaxPlatinium(p.getNodeOn());
-                    if(maxPlatiniumTarget != null && maxPlatiniumTarget.getOwnerID() != MY_ID) {
-                        p.setTarget(maxPlatiniumTarget);
+        switch (STRATEGY) {
+            case RUSH_HQ_SMART:
+                for(Pod p : PodsManager.getInstance().getPodsWithoutTarget()) {
+                    p.setTarget(MAP.getEnemyQG());
+                }
+                for(Pod p : PodsManager.getInstance().getPods()) {
+                    if(!(p.getID() == PodsManager.getInstance().getFirstRushPodID())){
+                        Node maxPlatiniumTarget = MAP.getNeighbourWithMaxPlatinium(p.getNodeOn());
+                        if(maxPlatiniumTarget != null && maxPlatiniumTarget.getOwnerID() != MY_ID) {
+                            p.setTarget(maxPlatiniumTarget);
+                        }
                     }
                 }
-            }
-        }
-        else if (STRATEGY == Strategy.RUSH_HQ) {
-            for(Pod p : PodsManager.getInstance().getPodsWithoutTarget()) {
-                p.setTarget(MAP.getEnemyQG());
-            }
-        }
-        else if(STRATEGY == Strategy.RULES) {
-            for (Pod p : PodsManager.getInstance().getPodsWithoutTarget()) {
-                p.setTarget(MAP.getEnemyQG());
-                p.setCanBeMerged(false);
-            }
-            for (Pod p : PodsManager.getInstance().getPods()) {
-                List<Node> dest;
-                List<Node> possibleDest = p.getNodeOn().getLinkedNodes();
-                dest = getEnemyNodes(possibleDest);
-                if(!dest.isEmpty()) dest = getMaxPlatiniumProduction(dest);
-                if(!dest.isEmpty()) {
-                    p.setTarget(dest.get(0));
+                break;
+            case RUSH_HQ:
+                for(Pod p : PodsManager.getInstance().getPodsWithoutTarget()) {
+                    p.setTarget(MAP.getEnemyQG());
                 }
-                else {
-                    dest = getMaxPlatiniumProduction(possibleDest);
-                    if (!dest.isEmpty()) dest = getNodesNotTargeted(dest);
-                    if (!dest.isEmpty()) dest = getNeutralNodes(dest);
-                    if(!dest.isEmpty()){
+                break;
+            case RULES:
+                for (Pod p : PodsManager.getInstance().getPodsWithoutTarget()) {
+                    p.setTarget(MAP.getEnemyQG());
+                    p.setCanBeMerged(false);
+                }
+                for (Pod p : PodsManager.getInstance().getPods()) {
+                    List<Node> dest;
+                    List<Node> possibleDest = p.getNodeOn().getLinkedNodes();
+                    dest = getEnemyNodes(possibleDest);
+                    if(!dest.isEmpty()) dest = getMaxPlatiniumProduction(dest);
+                    if(!dest.isEmpty()) {
                         p.setTarget(dest.get(0));
                     }
                     else {
-                        dest = getNeutralNodes(possibleDest);
-                        if(!dest.isEmpty()) dest = getNodesNotTargeted(dest);
-                        if (!dest.isEmpty()) {
+                        dest = getMaxPlatiniumProduction(possibleDest);
+                        if (!dest.isEmpty()) dest = getNodesNotTargeted(dest);
+                        if (!dest.isEmpty()) dest = getNeutralNodes(dest);
+                        if(!dest.isEmpty()){
                             p.setTarget(dest.get(0));
                         }
                         else {
-                            dest = getNodeWithEnemy(possibleDest);
-                            if(!dest.isEmpty()) {
+                            dest = getNeutralNodes(possibleDest);
+                            if(!dest.isEmpty()) dest = getNodesNotTargeted(dest);
+                            if (!dest.isEmpty()) {
                                 p.setTarget(dest.get(0));
                             }
                             else {
-                                p.setTarget(MAP.getEnemyQG());
+                                dest = getNodeWithEnemy(possibleDest);
+                                if(!dest.isEmpty()) {
+                                    p.setTarget(dest.get(0));
+                                }
+                                else {
+                                    p.setTarget(MAP.getEnemyQG());
+                                }
                             }
+                            p.setCanBeMerged(true);
                         }
-                        p.setCanBeMerged(true);
                     }
                 }
-            }
-            Pod biggestPod = PodsManager.getInstance().getMaxQuantityPod();
-            biggestPod.setTarget(MAP.getEnemyQG());
+                Pod biggestPod = PodsManager.getInstance().getMaxQuantityPod();
+                biggestPod.setTarget(MAP.getEnemyQG());
+                break;
+            case THOMAS:
+                for(Pod p : PodsManager.getInstance().getPods()){
+                    if (p.getState() == Pod.State.EXPLORER) MAP.updateNodesInterest(p);
+                    p.run();
+                }
+                break;
+            case THOMAS_TEST:
+                for(Pod p : PodsManager.getInstance().getPods()){
+                    Node currentNode = p.getNodeOn();
+                    for (Node n : currentNode.getLinkedNodes()) {
+                        if (!n.isVisited()) {
+                            p.setTarget(n);
+                            break;
+                        }
+                    }
+                    if(!p.hasPath()){
+                        int size = p.getHistoricPath().size();
+                        if(size>0){
+                            p.setTarget(p.getHistoricPath().get(size-1));
+                        }
+                        else{
+                            p.setTarget(MAP.getEnemyQG());
+                        }
+                    }
+                }
+                break;
         }
     }
 
