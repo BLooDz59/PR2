@@ -13,7 +13,7 @@ public class Node {
     private int ownerID;
     private boolean BFSdiscovered;
     private Node BFSparent;
-    private int interest;
+    private float interest;
     private boolean visited;
     private boolean targeted;
 
@@ -54,7 +54,7 @@ public class Node {
 
     public boolean isTargeted() { return targeted; }
 
-    public int getInterest() { return interest; }
+    public float getInterest() { return interest; }
 
     public boolean isVisited() { return visited; }
 
@@ -89,7 +89,7 @@ public class Node {
 
     public void setTargeted(boolean val) { targeted = val; }
 
-    public void setInterest(int interest) {    this.interest = interest; }
+    public void setInterest(float interest) { this.interest = interest; }
 
     public void setVisited(boolean val) { visited = val; }
 
