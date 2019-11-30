@@ -288,7 +288,7 @@ public class PodsManager {
     }
 
     public void bufferAddPod(Node coord, int quantity, Pod.State state) {
-        if(quantity != 0) {
+        if(quantity > 0) {
             podsBuffer.add(new Pod(coord, quantity, creationID, state));
             creationID++;
         }

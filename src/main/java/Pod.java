@@ -129,12 +129,26 @@ public class Pod {
                 break;
             }
         }
-        if(!hasPath()) setTarget(strategyManager.getMap().getEnemyQG());
+        if(!hasPath()) setTarget(selectRushTarget());
+    }
+
+    private Node selectRushTarget() {
+        StrategyManager strategyManager = StrategyManager.getInstance();
+        Node bestTarget = strategyManager.getMap().getEnemyQG();
+        int lengthPathToEnemyHQ = PathFinding.BFS(bestTarget, getNodeOn()).size();
+        for (Node n : strategyManager.getMap().getStrategicNodes()) {
+            if (n.getOwnerID() != strategyManager.getPlayerID()) {
+                if (PathFinding.BFS(n, getNodeOn()).size() < lengthPathToEnemyHQ) {
+                    bestTarget = n;
+                }
+            }
+        }
+        return bestTarget;
     }
 
     private Node selectBestTarget() {
         Node ret = null;
-        int bestInterest = 0;
+        float bestInterest = 0;
         for (Node n : getNodeOn().getLinkedNodes()) {
             if(n.getInterest() > bestInterest) {
                 ret = n;

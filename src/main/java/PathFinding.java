@@ -46,4 +46,38 @@ public class PathFinding {
         path.remove(0);
         return path;
     }
+
+    public static int nearestAttractivenessNode(Node start) {
+        ArrayList<Node> exploratedNodes = new ArrayList<>();
+        ArrayList<Integer> path = new ArrayList<>();
+        Queue<Node> queue = new LinkedList<>();
+        start.setBFSdiscovered(true);
+        queue.add(start);
+        float interest = start.getInterest();
+        while (queue.size() != 0){
+            Node node = queue.remove();
+            if(node.getInterest() > interest){
+                while (node != null) {
+                    path.add(node.getId());
+                    node = node.getBFSparent();
+                }
+            }
+            else {
+                for(Node n : node.getLinkedNodes()){
+                    if(!n.isBFSdiscovered()){
+                        exploratedNodes.add(n);
+                        n.setBFSdiscovered(true);
+                        n.setBFSparent(node);
+                        queue.add(n);
+                    }
+                }
+            }
+        }
+        start.setBFSdiscovered(false);
+        for(Node n : exploratedNodes){
+            n.setBFSdiscovered(false);
+            n.setBFSparent(null);
+        }
+        return path.get(0);
+    }
 }

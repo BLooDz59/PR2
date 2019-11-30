@@ -117,6 +117,36 @@ public class Graph {
         return ret;
     }
 
+    public void updateNodesInterest(Pod p) {
+        //int enemyID = StrategyManager.getInstance().getPlayerID()^1;
+        for (Node n : p.getNodeOn().getLinkedNodes()) {
+            /*float attractiveness = 0;
+            attractiveness = 0.1f + n.getPlatinumProduction();
+            int numberOfAdjacentZone = n.getLinkedNodes().size();
+            for (Node node : n.getLinkedNodes()) {
+                if (node.getPlatinumProduction() != 0 && node.getOwnerID() == -1) attractiveness += 0.25;
+                if (node.getPlatinumProduction() != 0 && node.getOwnerID() == enemyID) attractiveness += 0.75;
+                attractiveness /= numberOfAdjacentZone;
+                int numberOfPlatinumSourcesThatICanTakeInNextTwoMove = 0;
+                for (Node node1 : node.getLinkedNodes()) {
+                    if (node1.getPlatinumProduction() != 0) numberOfPlatinumSourcesThatICanTakeInNextTwoMove++;
+                }
+                attractiveness += (0.25 * numberOfPlatinumSourcesThatICanTakeInNextTwoMove) / 2;
+            }
+            if(n.getOwnerID() == StrategyManager.getInstance().getPlayerID()) attractiveness = 0;
+            n.setInterest(attractiveness);*/
+            float interest = 0;
+            if (n.getPlatinumProduction() != 0 && n.getOwnerID()!= StrategyManager.getInstance().getPlayerID()) interest += 1 + n.getPlatinumProduction();
+            for (Node node : n.getLinkedNodes()){
+                interest += node.isVisible();
+            }
+            if(n.isNeutral()) interest *=10;
+            if(n.getOwnerID() == (StrategyManager.getInstance().getPlayerID()^1)) interest *=20;
+            if(n.isTargeted() || p.getLastTarget() == n) interest = 0;
+            n.setInterest(interest);
+        }
+    }
+
     /**
      * TEST METHOD : WILL BE DELETE
      * Give a random node from the graph
@@ -140,20 +170,6 @@ public class Graph {
         }
     }
 
-    public void updateNodesInterest(Pod p) {
-        for (Node n : p.getNodeOn().getLinkedNodes()) {
-            int interest = 0;
-            if (n.getPlatinumProduction() != 0 && n.getOwnerID()!= StrategyManager.getInstance().getPlayerID()) interest += 1 + n.getPlatinumProduction();
-            for (Node node : n.getLinkedNodes()){
-                interest += node.isVisible();
-            }
-            if(n.isNeutral()) interest *=10;
-            if(n.getOwnerID() == (StrategyManager.getInstance().getPlayerID()^1)) interest *=20;
-            if(n.isTargeted() || p.getLastTarget() == n) interest = 0;
-            n.setInterest(interest);
-        }
-    }
-
     public void setStrategicNodes() {
         for (Node n : graph) {
             if (PathFinding.BFS(qg, n).size() == PathFinding.BFS(enemyQG, n).size()) {
@@ -172,6 +188,12 @@ public class Graph {
     public void displayStrategicNodes() {
         for (Node n : strategicNodes) {
             System.err.println(n.getId());
+        }
+    }
+
+    public void displayInterest() {
+        for (Node n : graph) {
+            System.err.println(n.getId() + " " + n.getInterest());
         }
     }
 }
