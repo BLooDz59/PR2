@@ -1,7 +1,6 @@
 package main.java;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 public class Pod {
     private final int ID;
@@ -117,7 +116,7 @@ public class Pod {
 
     private void explore() {
         Node bestTarget = selectBestTarget();
-        if (bestTarget == null) bestTarget = StrategyManager.getInstance().getMap().getEnemyQG();
+        if (bestTarget == null || bestTarget.getOwnerID() == StrategyManager.getInstance().getPlayerID() || bestTarget.isLeaf()) bestTarget = StrategyManager.getInstance().getMap().getEnemyHQ();
         setTarget(bestTarget);
     }
 
@@ -134,7 +133,7 @@ public class Pod {
 
     private Node selectRushTarget() {
         StrategyManager strategyManager = StrategyManager.getInstance();
-        Node bestTarget = strategyManager.getMap().getEnemyQG();
+        Node bestTarget = strategyManager.getMap().getEnemyHQ();
         int lengthPathToEnemyHQ = PathFinding.BFS(bestTarget, getNodeOn()).size();
         for (Node n : strategyManager.getMap().getStrategicNodes()) {
             if (n.getOwnerID() != strategyManager.getPlayerID()) {

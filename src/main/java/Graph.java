@@ -8,8 +8,8 @@ public class Graph {
 
     private Node[] graph;
     private List<Node> nodeWithPods;
-    private Node qg;
-    private Node enemyQG;
+    private Node HQ;
+    private Node enemyHQ;
     private List<Node> strategicNodes;
 
     private int[][] lengthBetweenZones;
@@ -19,8 +19,8 @@ public class Graph {
         graph = new Node[size];
         nodeWithPods = new ArrayList<>();
         strategicNodes = new ArrayList<>();
-        qg = null;
-        enemyQG = null;
+        HQ = null;
+        enemyHQ = null;
     }
 
 
@@ -30,15 +30,15 @@ public class Graph {
 
     public List<Node> getNodesWithPods() { return nodeWithPods; }
 
-    public Node getQG() { return qg; }
+    public Node getHQ() { return HQ; }
 
-    public Node getEnemyQG() { return enemyQG; }
+    public Node getEnemyHQ() { return enemyHQ; }
 
     //Setters
 
-    public void setQG(Node node) { qg = node; }
+    public void setQG(Node node) { HQ = node; }
 
-    public void setEnemyQG(Node node) { enemyQG = node; }
+    public void setEnemyHQ(Node node) { enemyHQ = node; }
 
     /**
      * Add node in the graph
@@ -118,23 +118,7 @@ public class Graph {
     }
 
     public void updateNodesInterest(Pod p) {
-        //int enemyID = StrategyManager.getInstance().getPlayerID()^1;
         for (Node n : p.getNodeOn().getLinkedNodes()) {
-            /*float attractiveness = 0;
-            attractiveness = 0.1f + n.getPlatinumProduction();
-            int numberOfAdjacentZone = n.getLinkedNodes().size();
-            for (Node node : n.getLinkedNodes()) {
-                if (node.getPlatinumProduction() != 0 && node.getOwnerID() == -1) attractiveness += 0.25;
-                if (node.getPlatinumProduction() != 0 && node.getOwnerID() == enemyID) attractiveness += 0.75;
-                attractiveness /= numberOfAdjacentZone;
-                int numberOfPlatinumSourcesThatICanTakeInNextTwoMove = 0;
-                for (Node node1 : node.getLinkedNodes()) {
-                    if (node1.getPlatinumProduction() != 0) numberOfPlatinumSourcesThatICanTakeInNextTwoMove++;
-                }
-                attractiveness += (0.25 * numberOfPlatinumSourcesThatICanTakeInNextTwoMove) / 2;
-            }
-            if(n.getOwnerID() == StrategyManager.getInstance().getPlayerID()) attractiveness = 0;
-            n.setInterest(attractiveness);*/
             float interest = 0;
             if (n.getPlatinumProduction() != 0 && n.getOwnerID()!= StrategyManager.getInstance().getPlayerID()) interest += 1 + n.getPlatinumProduction();
             for (Node node : n.getLinkedNodes()){
@@ -143,7 +127,13 @@ public class Graph {
             if(n.isNeutral()) interest *=10;
             if(n.getOwnerID() == (StrategyManager.getInstance().getPlayerID()^1)) interest *=20;
             if(n.isTargeted() || p.getLastTarget() == n) interest = 0;
-            n.setInterest(interest);
+            if(n.getInterest() < 0 ) n.setInterest(interest);
+        }
+    }
+
+    public void resetNodeInterest() {
+        for(Node n : graph) {
+            n.setInterest(-1);
         }
     }
 
@@ -172,7 +162,7 @@ public class Graph {
 
     public void setStrategicNodes() {
         for (Node n : graph) {
-            if (PathFinding.BFS(qg, n).size() == PathFinding.BFS(enemyQG, n).size()) {
+            if (PathFinding.BFS(HQ, n).size() == PathFinding.BFS(enemyHQ, n).size()) {
                 strategicNodes.add(n);
             }
         }

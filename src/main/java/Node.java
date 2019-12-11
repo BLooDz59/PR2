@@ -93,6 +93,15 @@ public class Node {
 
     public void setVisited(boolean val) { visited = val; }
 
+    public boolean isLeaf() {
+        if(getLinkedNodes().size() == 1 && getLinkedNodes().get(0).getOwnerID() == StrategyManager.getInstance().getPlayerID()) {
+        return true;
+        }
+        else {
+            return false;
+        }
+    }
+
     /**
      * Add the node given in parameters to the list of neighbours
      * @param node to add in neighbours list

@@ -107,7 +107,7 @@ public class StrategyManager {
         switch (STRATEGY) {
             case RUSH_HQ_SMART:
                 for(Pod p : PodsManager.getInstance().getPodsWithoutTarget()) {
-                    p.setTarget(MAP.getEnemyQG());
+                    p.setTarget(MAP.getEnemyHQ());
                 }
                 for(Pod p : PodsManager.getInstance().getPods()) {
                     if(!(p.getID() == PodsManager.getInstance().getFirstRushPodID())){
@@ -120,12 +120,12 @@ public class StrategyManager {
                 break;
             case RUSH_HQ:
                 for(Pod p : PodsManager.getInstance().getPodsWithoutTarget()) {
-                    p.setTarget(MAP.getEnemyQG());
+                    p.setTarget(MAP.getEnemyHQ());
                 }
                 break;
             case RULES:
                 for (Pod p : PodsManager.getInstance().getPodsWithoutTarget()) {
-                    p.setTarget(MAP.getEnemyQG());
+                    p.setTarget(MAP.getEnemyHQ());
                     p.setCanBeMerged(false);
                 }
                 for (Pod p : PodsManager.getInstance().getPods()) {
@@ -155,7 +155,7 @@ public class StrategyManager {
                                     p.setTarget(dest.get(0));
                                 }
                                 else {
-                                    p.setTarget(MAP.getEnemyQG());
+                                    p.setTarget(MAP.getEnemyHQ());
                                 }
                             }
                             p.setCanBeMerged(true);
@@ -163,7 +163,7 @@ public class StrategyManager {
                     }
                 }
                 Pod biggestPod = PodsManager.getInstance().getMaxQuantityPod();
-                biggestPod.setTarget(MAP.getEnemyQG());
+                biggestPod.setTarget(MAP.getEnemyHQ());
                 break;
             case THOMAS:
                 for(Pod p : PodsManager.getInstance().getPods()){
@@ -186,7 +186,7 @@ public class StrategyManager {
                             p.setTarget(p.getHistoricPath().get(size-1));
                         }
                         else{
-                            p.setTarget(MAP.getEnemyQG());
+                            p.setTarget(MAP.getEnemyHQ());
                         }
                     }
                 }

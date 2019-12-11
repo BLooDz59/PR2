@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class PodsManager {
+
     private List<Pod> pods;
     private List<Pod> podsBuffer;
     private List<Pod> removedPodsBuffer;
@@ -54,7 +55,7 @@ public class PodsManager {
     public int getFirstRushPodID() {
         int ret = -1;
         for (Pod p : pods) {
-            if(p.getTarget() == MAP.getEnemyQG()) {
+            if(p.getTarget() == MAP.getEnemyHQ()) {
                 ret = p.getID();
                 break;
             }
@@ -241,6 +242,7 @@ public class PodsManager {
             checkBattle(node);
         }
     }
+
 
     /**
      * Split the specified pod into n pods after postUpdate()
