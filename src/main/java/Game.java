@@ -47,6 +47,7 @@ public class Game {
         STRATEGY_MANAGER.setPlayerID(MY_ID);
         PODS_MANAGER.setGraph(map);
         PODS_MANAGER.setPlayerID(MY_ID); // Create the PodsManager needed to move all the pods
+        map.resetNodeInterest();
     }
 
     /**
@@ -64,7 +65,7 @@ public class Game {
     }
 
     private void firstTurn() {
-        if(PathFinding.BFS(map.getEnemyQG(), map.getQG()).size()<=6) STRATEGY_MANAGER.setStrategy(Strategy.RUSH_HQ);
+        if(PathFinding.BFS(map.getEnemyHQ(), map.getHQ()).size()<=6) STRATEGY_MANAGER.setStrategy(Strategy.RUSH_HQ);
         map.setStrategicNodes();
         map.displayStrategicNodes();
         itsFirstTurn = false;
@@ -81,9 +82,9 @@ public class Game {
             map.updatePods(MY_ID, currentNode, IN.nextInt(), IN.nextInt());
             if (itsFirstTurn) {
                 if (currentNode.getPodsNumber() > 0) { map.setQG(currentNode); }
-                if (currentNode.getOwnerID() == ENEMY_ID) { map.setEnemyQG(currentNode); }
+                if (currentNode.getOwnerID() == ENEMY_ID) { map.setEnemyHQ(currentNode); }
             }
-            if(currentNode.equals(map.getQG())){
+            if(currentNode.equals(map.getHQ())){
                 PODS_MANAGER.createPod(currentNode, currentNode.getPodsNumber() - PODS_MANAGER.getPodQuantityOnQG(currentNode));
             }
             currentNode.setVisibility(IN.nextInt());
@@ -112,6 +113,7 @@ public class Game {
     private void sendCommand() {
         //First line for movement commands, second line no longer used (see the protocol in the statement for details)
         PODS_MANAGER.sendCommand();
+        map.resetNodeInterest();
         System.out.println("WAIT");
     }
 }
